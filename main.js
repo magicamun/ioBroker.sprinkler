@@ -43,7 +43,7 @@ class Sprinkler extends utils.Adapter {
 	 */
 	async onReady() {
 		// Initialize your adapter here
-		tempUnit = this.getObject("system.config", function(obj, err) {
+		tempUnit = this.getObject("system.config", function(err, obj) {
 			return obj.common.tempUnit;
 		});
 				
