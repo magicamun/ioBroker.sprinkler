@@ -1,0 +1,75 @@
+{
+	"common": {
+		"name": "sprinkler",
+		"version": "0.0.1",
+		"news": {
+			"0.0.1": {
+				"en": "initial release",
+				"de": "Erstveröffentlichung",
+				"ru": "Начальная версия",
+				"pt": "lançamento inicial",
+				"nl": "Eerste uitgave",
+				"fr": "Première version",
+				"it": "Versione iniziale",
+				"es": "Versión inicial",
+				"pl": "Pierwsze wydanie",
+				"zh-cn": "首次出版"
+			}
+		},
+		"title": "Sprinkler Management",
+		"titleLang": {
+			"en": "Sprinkler Management",
+			"de": "Sprinkler-Management",
+			"ru": "Спринклер Менеджмент",
+			"pt": "Gerenciamento de aspersão",
+			"nl": "Sprinklerbeheer",
+			"fr": "Gestion des gicleurs",
+			"it": "Gestione degli sprinkler",
+			"es": "Manejo de rociadores",
+			"pl": "Zarządzanie tryskaczami",
+			"zh-cn": "洒水管理"
+		},
+		"desc": {
+			"en": "Sprinkler",
+			"de": "Sprinkler",
+			"ru": "разбрызгиватель",
+			"pt": "Aspersor",
+			"nl": "sproeier",
+			"fr": "Arroseur",
+			"it": "spruzzatore",
+			"es": "Aspersor",
+			"pl": "Tryskacz",
+			"zh-cn": "洒水器"
+		},
+		"authors": [
+			"Lutz Thielemann <Lutz.Thielemann@gmx.net>"
+		],
+		"keywords": [
+			"garden",
+			"watering"
+		],
+		"license": "MIT",
+		"platform": "Javascript/Node.js",
+		"main": "main.js",
+		"icon": "sprinkler.png",
+		"enabled": true,
+		"extIcon": "https://raw.githubusercontent.com/Lutz Thielemann/ioBroker.sprinkler/master/admin/sprinkler.png",
+		"readme": "https://github.com/Lutz Thielemann/ioBroker.sprinkler/blob/master/README.md",
+		"loglevel": "info",
+		"mode": "daemon",
+		"type": "garden",
+		"compact": true,
+		"materialize": true,
+		"dependencies": [
+			{
+				"js-controller": ">=1.4.2"
+			}
+		]
+	},
+	"native": {
+		"option1": true,
+		"option2": "42"
+	},
+	"objects": [],
+	"instanceObjects": []
+}
