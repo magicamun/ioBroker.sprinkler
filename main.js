@@ -7,9 +7,19 @@
 // The adapter-core module gives you access to the core ioBroker functions
 // you need to create an adapter
 const utils = require("@iobroker/adapter-core");
+const h24 = 23 * 60 * 60;
+const h1 = 1 * 60 * 60;
+const sprinkler = 'Sprinkler'
+const zimmerman = 'Zimmerman';
+const average = 'average';
+const tage = ['today', 'yesterday'];
+const hours = ['00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23']
+const values = ['temperature', 'humidity', 'precipitation'];
+const tempUnit = getObject('system.config').common.tempUnit;
 
 // Load your modules here, e.g.:
 // const fs = require("fs");
+
 
 class Sprinkler extends utils.Adapter {
 
@@ -38,6 +48,7 @@ class Sprinkler extends utils.Adapter {
 		// this.config:
 		this.log.info("config option1: " + this.config.option1);
 		this.log.info("config option2: " + this.config.option2);
+		this.log.info("config Temperature-Unit: " + tempUnit);
 
 		/*
 		For every state in the system there has to be also an object of type state
