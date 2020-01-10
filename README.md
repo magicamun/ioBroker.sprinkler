@@ -5,8 +5,8 @@
 [![Downloads](https://img.shields.io/npm/dm/iobroker.sprinkler.svg)](https://www.npmjs.com/package/iobroker.sprinkler)
 ![Number of Installations (latest)](http://iobroker.live/badges/sprinkler-installed.svg)
 ![Number of Installations (stable)](http://iobroker.live/badges/sprinkler-stable.svg)
-[![Dependency Status](https://img.shields.io/david/Lutz Thielemann/iobroker.sprinkler.svg)](https://david-dm.org/Lutz Thielemann/iobroker.sprinkler)
-[![Known Vulnerabilities](https://snyk.io/test/github/Lutz Thielemann/ioBroker.sprinkler/badge.svg)](https://snyk.io/test/github/Lutz Thielemann/ioBroker.sprinkler)
+[![Dependency Status](https://img.shields.io/david/magicamun/iobroker.sprinkler.svg)](https://david-dm.org/magicamun/iobroker.sprinkler)
+[![Known Vulnerabilities](https://snyk.io/test/github/magicamun/ioBroker.sprinkler/badge.svg)](https://snyk.io/test/github/magicamun/ioBroker.sprinkler)
 
 [![NPM](https://nodei.co/npm/iobroker.sprinkler.png?downloads=true)](https://nodei.co/npm/iobroker.sprinkler/)
 

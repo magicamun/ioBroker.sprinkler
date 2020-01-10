@@ -3,10 +3,10 @@
   "version": "0.0.1",
   "description": "Sprinkler",
   "author": {
-    "name": "Lutz Thielemann",
+    "name": "magicamun",
     "email": "Lutz.Thielemann@gmx.net"
   },
-  "homepage": "https://github.com/Lutz Thielemann/ioBroker.sprinkler",
+  "homepage": "https://github.com/magicamun/ioBroker.sprinkler",
   "license": "MIT",
   "keywords": [
     "garden",
@@ -14,7 +14,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/Lutz Thielemann/ioBroker.sprinkler"
+    "url": "https://github.com/magicamun/ioBroker.sprinkler"
   },
   "dependencies": {
     "@iobroker/adapter-core": "^2.1.0"
@@ -49,7 +49,7 @@
     "lint": "eslint"
   },
   "bugs": {
-    "url": "https://github.com/Lutz Thielemann/ioBroker.sprinkler/issues"
+    "url": "https://github.com/magicamun/ioBroker.sprinkler/issues"
   },
   "readmeFilename": "README.md"
 }
