@@ -112,9 +112,12 @@ class Sprinkler extends utils.Adapter {
 		/*
 		create States for Zimmerman - watering adjustment
 		*/
-		await this.createZimmerman();
+		this.createZimmerman();
 
-		stations.forEach(await this.createStation);
+		for (var st = 0; st < stations.length; st++) {
+			this.createStation(stations[st], st);
+		}
+		stations.forEach(this.createStation);
 		// in this template all states changes inside the adapters namespace are subscribed
 		this.subscribeStates("*");
 
@@ -181,12 +184,12 @@ class Sprinkler extends utils.Adapter {
 	 * @param {*} index 
 	 */
 	createStation(station, index) {
-		var idStation = buildId(sprinkler, 'Station', station.id.toString());
-	
+		var idStation = buildId('Station', station.id.toString());
+
 		this.setObjectAsync(buildId(idStation, 'name'), {type: "state", common: {name: "Bezeichnung Bewässerungskreis", type: "string", role: "state", read: true, write: true, def: station.name}, native: {}});
 		this.setObjectAsync(buildId(idStation, 'subscription'), {type: "state", common: {name: "verknüpfter Status", type: "string", role: "state", read: true, write: true, def: station.subscription}, native: {}});
 		this.setObjectAsync(buildId(idStation, 'parallel'), {type: "state", common: {name: "Parallel", type: "bool", role: "state", read: true, write: true, def: station.parallel}, native: {}});
-		this.setObjectAsync(buildId(idStation, 'parallel'), {type: "state", common: {name: "Disabled", type: "bool", role: "state", read: true, write: true, def: station.disabled}, native: {}});
+		this.setObjectAsync(buildId(idStation, 'disabled'), {type: "state", common: {name: "Disabled", type: "bool", role: "state", read: true, write: true, def: station.disabled}, native: {}});
 		this.setObjectAsync(buildId(idStation, 'activate'), {type: "state", common: {name: "Aktivieren für n Sekunden", type: "bool", role: "state", read: true, write: true}, native: {}});
 		this.setObjectAsync(buildId(idStation, 'state'), {type: "state", common: {name: "Aktiv", type: "number", role: "state", states: "0:not running; 1:waiting; 2:running; 3:stopping", read: true, write: true}, native: {}});
 		this.setObjectAsync(buildId(idStation, 'started'), {type: "state", common: {name: "letzter Start", type: "number", role: "state", read: true, write: true}, native: {}});
