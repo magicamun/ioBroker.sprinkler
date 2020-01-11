@@ -197,6 +197,38 @@ class Sprinkler extends utils.Adapter {
 		this.setObjectAsync(buildId(idStation, 'master'), {type: "state", common: {name: "Masterstation?", type: "bool", role: "state", read: true, write: true, def: station.master}, native: {}});
 		this.setObjectAsync(buildId(idStation, 'needs_master'), {type: "state", common: {name: "benötigt Master", type: "number", role: "state", read: true, write: true, def: station.needs_master}, native: {}});
 	}
+
+	/**
+	 * create Program
+	 * @param {*} program 
+	 * @param {*} pi 
+	 */
+	createProgram(program, pi) {
+		var idProgram = buildId('Program', pi.toString()); 
+		var result;
+		
+		this.setObjectAsync(buildId(idProgram, 'name'), {type: "state", common: {name: "Programmname", type: "string", role: "state", read: true, write: true, def: program.name}, native: {}});
+		this.setObjectAsync(buildId(idProgram, 'state'), {type: "state", common: {name: "Status", type: "number", role: "state", states: "0:unscheduled; 1:scheduled; 2:inactive; 3:adHoc", read: true, write: true, def: program.state}, native: {}});
+		this.setObjectAsync(buildId(idProgram, 'schedule'), {type: "state", common: {name: "Zeitplan", type: "string", role: "state", read: true, write: true, def: program.state}, native: {}});
+		
+		for (var ps = 0; ps < program.stations.length; ps++) {
+			this.setObjectAsync(buildId(idProgram, 'nr', ps.toString(), 'station'), {type: "state", common: {name: "Bewässerungskreis", type: "string", role: "state", read: true, write: true, def: parseInt(program.stations[ps].id)}, native: {}});
+			this.setObjectAsync(buildId(idProgram, 'nr', ps.toString(), 'duration'), {type: "state", common: {name: "Dauer", type: "number", role: "state", read: true, write: true, def: parseInt(program.stations[ps].duration)}, native: {}});
+			this.setObjectAsync(buildId(idProgram, 'nr', ps.toString(), 'adjust'), {type: "state", common: {name: "Zimmerman-Anpassung", type: "bool", role: "state", read: true, write: true, def: program.stations[ps].adjust}, native: {}});
+		};
+	
+		if (program.state == 0) { // Unscheduled
+			this.log.info('Schedule.1: ' + program.schedule);
+			/*
+			var result = this.schedule(program.schedule, function() {
+				SprinklerRunProgram(pi);
+			});
+			*/
+			this.log.info('Schedule.2: ' + result);
+			// setState(SprinklerBuildId(idProgram, 'state'), 1);
+		}
+	}
+
 	/**
 	 * Is called when adapter shuts down - callback has to be called under any circumstances!
 	 * @param {() => void} callback
