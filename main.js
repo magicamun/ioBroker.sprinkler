@@ -9,13 +9,14 @@
 const utils = require("@iobroker/adapter-core");
 const h24 = 23 * 60 * 60;
 const h1 = 1 * 60 * 60;
-const sprinkler = 'Sprinkler'
+const sprinkler = 'Sprinkler';
 const zimmerman = 'Zimmerman';
 const average = 'average';
 const tage = ['today', 'yesterday'];
 const hours = ['00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23']
 const values = ['temperature', 'humidity', 'precipitation'];
-var tempUnit;
+const tempUnit = "°C";
+const rainUnit = "mm";
 
 // Load your modules here, e.g.:
 // const fs = require("fs");
@@ -45,7 +46,7 @@ class Sprinkler extends utils.Adapter {
 		// Initialize your adapter here
 		this.log.info("Mein Log 1");
 
-		tempUnit = this.getForeignObject("system.config").common.tempUnit;
+		// tempUnit = this.getForeignObject("system.config").common.tempUnit;
 		this.log.info("Mein Log 2");
 				
 		// The adapters config (in the instance object everything under the attribute "native") is accessible via
@@ -59,20 +60,10 @@ class Sprinkler extends utils.Adapter {
 		Here a simple template for a boolean variable named "testVariable"
 		Because every adapter instance uses its own unique namespace variable names can't collide with other adapters variables
 		*/
-		await this.setObjectAsync("testVariable", {
-			type: "state",
-			common: {
-				name: "testVariable",
-				type: "boolean",
-				role: "indicator",
-				read: true,
-				write: true,
-			},
-			native: {},
-		});
-
-		await this.setObjectAsync("testVariable", {type: "state", common: {name: "testVariable", type: "boolean", role: "indicator", read: true, write: true,}, native: {},);
-
+		/*
+		create States for Zimmerman - watering adjustment
+		*/
+		this.createZimmerman();
 		// in this template all states changes inside the adapters namespace are subscribed
 		this.subscribeStates("*");
 
@@ -98,6 +89,41 @@ class Sprinkler extends utils.Adapter {
 		this.log.info("check group user admin group admin: " + result);
 	}
 
+	/**
+	 * assemble ObjectId
+	 * @param {*} callback 
+	 */
+	buildId() {
+		var id = "";
+		var dot = "";
+		for (var i = 0; i < arguments.length; i++) {
+			id = id + dot + arguments[i];
+			dot = '.';
+		}
+		return id;
+	}
+	/**
+	 * Create Zimmerman States for watering adjustment
+	 * @param {*} callback 
+	 */
+	createZimmerman() {
+		await this.setObjectAsync(this.buildId(zimmerman, "average_humidity"), {type: "state", common: {name: "rel. mittlere Luftfeuchte", type: "number", role: "state", unit: "%", read: true, write: true}, native: {},});
+		await this.setObjectAsync(this.buildId(zimmerman, "neutral_humidity"), {type: "state", common: {name: "rel. neutrale Luftfeuchte", type: "number", role: "state", unit: "%", read: true, write: true, def: 30}, native: {},});
+		await this.setObjectAsync(this.buildId(zimmerman, "average_temperature"), {type: "state", common: {name: "mittlere Temperatur", type: "number", role: "state", unit: tempUnit, read: true, write: true}, native: {},});
+		await this.setObjectAsync(this.buildId(zimmerman, "neutral_temperature"), {type: "state", common: {name: "neutrale Temperatur", type: "number", role: "state", unit: tempUnit, read: true, write: true, def: 70}, native: {},});
+		await this.setObjectAsync(this.buildId(zimmerman, "precipitation_today"), {type: "state", common: {name: "Niederschlag heute", type: "number", role: "state", unit: rainUnit, read: true, write: true,}, native: {},});
+		await this.setObjectAsync(this.buildId(zimmerman, "precipitation_yesterday"), {type: "state", common: {name: "Niederschlag gestern", type: "number", role: "state", unit: rainUnit, read: true, write: true,}, native: {},});
+
+		await this.setObjectAsync(this.buildId(zimmerman, "adjustment"), {type: "state", common: {name: "Anpassung Beregnungsmenge", type: "number", role: "state", unit: "%", read: true, write: true,}, native: {},});
+
+		for (var t = 0; t <= 1; t++) {
+			for (var h = 0; h <= 23; h++) {
+				await this.setObjectAsync(this.buildId(zimmerman, tage[t], values[0] + '_' + hours[h]), {type: "state", common: {name: "Temperatur ", type: "number", role: "state", unit: tempUnit, read: true, write: true,}, native: {},});
+				await this.setObjectAsync(this.buildId(zimmerman, tage[t], values[1] + '_' + hours[h]), {type: "state", common: {name: "rel. Feuchte", type: "number", role: "state", unit: tempUnit, read: true, write: true,}, native: {},});
+				await this.setObjectAsync(this.buildId(zimmerman, tage[t], values[2] + '_' + hours[h]), {type: "state", common: {name: "Niederschlag ", type: "number", role: "state", unit: tempUnit, read: true, write: true,}, native: {},});
+			}
+		}
+	}
 	/**
 	 * Is called when adapter shuts down - callback has to be called under any circumstances!
 	 * @param {() => void} callback
