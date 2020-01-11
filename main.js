@@ -18,6 +18,55 @@ const values = ['temperature', 'humidity', 'precipitation'];
 const tempUnit = "°C";
 const rainUnit = "mm";
 
+function buildId() {
+	var id = "";
+	var dot = "";
+	for (var i = 0; i < arguments.length; i++) {
+		id = id + dot + arguments[i];
+		dot = '.';
+	}
+	return id;
+}
+
+/**
+ * predfitions - need to be substitutded with configured ones
+ */
+const stations = [
+    {"id": 0, "name": "Rasen Zone 1 (Vorne)", "subscription": "fhem.0.AU_GA_Bewaesserung_Sw_01.state", "disabled": false, "parallel": false, "needs_master": 7},
+    {"id": 1, "name": "Rasen Zone 2 (Mitte)", "subscription": "fhem.0.AU_GA_Bewaesserung_Sw_02.state", "disabled": false, "parallel": false, "needs_master": 7},
+    {"id": 2, "name": "Rasen Zone 3 (Hinten)", "subscription": "fhem.0.AU_GA_Bewaesserung_Sw_03.state", "disabled": false, "parallel": false, "needs_master": 7},
+    {"id": 3, "name": "Beet Buchs", "subscription": "fhem.0.AU_GA_Bewaesserung_Sw_04.state", "disabled": false, "parallel": false},
+    {"id": 4, "name": "Terrasse", "subscription": "fhem.0.AU_GA_Bewaesserung_Sw_05.state", "disabled": false, "parallel": false},
+    {"id": 5, "name": "Beet rechts", "subscription": "fhem.0.AU_GA_Bewaesserung_Sw_06.state", "disabled": false, "parallel": false},
+    {"id": 6, "name": "Beet links", "subscription": "fhem.0.AU_GA_Bewaesserung_Sw_07.state", "disabled": false, "parallel": false},
+    {"id": 7, "name": "Master", "subscription": "fhem.0.AU_GA_Bewaesserung_Sw_08.state", "disabled": false, "parallel": false, "master": true}
+];
+
+const programs = [
+    {"id": 0, "name": "Rasen Abends", "state": 0, "stations": [
+                                            { "id": 0, "duration": 45 * 60 * 60, "adjust": true},
+                                            { "id": 1, "duration": 45 * 60 * 60, "adjust": true},
+                                            { "id": 2, "duration": 45 * 60 * 60, "adjust": true},
+                                        ], "schedule": '{astro: "sunset", shift: 90}'},
+    {"id": 1, "name": "Buchs", "state": 0, "stations": [
+                                            { "id": 3, "duration": 60 * 60 * 60, "adjust": true}
+                                        ], "schedule": "0 10 17 * * 1,3,5"},
+    {"id": 2, "name": "Terrasse", "state": 0, "stations": [
+                                            { "id": 4, "duration": 30 * 60 * 60, "adjust": true}
+                                        ], "schedule": "0 0 17 * * 1,2"}
+];
+
+var station_qe = {"id": - 1, "station": "", "duration": 0, "parallel": false, "subscription": "", "started": 0, "ended": 0, "needs_master": 0};
+var station_waiting = [station_qe];
+var station_running = [station_qe];
+
+var program_qe = {"id": - 1, "name": "", "schedule": "", "oldstate": 0};
+var program_schedule = [];
+var adhoc_schedule = [];
+/**
+ * End of predefines
+ */
+
 // Load your modules here, e.g.:
 // const fs = require("fs");
 
@@ -63,7 +112,9 @@ class Sprinkler extends utils.Adapter {
 		/*
 		create States for Zimmerman - watering adjustment
 		*/
-		this.createZimmerman();
+		await this.createZimmerman();
+
+		stations.forEach(await this.createStation);
 		// in this template all states changes inside the adapters namespace are subscribed
 		this.subscribeStates("*");
 
@@ -107,22 +158,41 @@ class Sprinkler extends utils.Adapter {
 	 * @param {*} callback 
 	 */
 	createZimmerman() {
-		await this.setObjectAsync(this.buildId(zimmerman, "average_humidity"), {type: "state", common: {name: "rel. mittlere Luftfeuchte", type: "number", role: "state", unit: "%", read: true, write: true}, native: {},});
-		await this.setObjectAsync(this.buildId(zimmerman, "neutral_humidity"), {type: "state", common: {name: "rel. neutrale Luftfeuchte", type: "number", role: "state", unit: "%", read: true, write: true, def: 30}, native: {},});
-		await this.setObjectAsync(this.buildId(zimmerman, "average_temperature"), {type: "state", common: {name: "mittlere Temperatur", type: "number", role: "state", unit: tempUnit, read: true, write: true}, native: {},});
-		await this.setObjectAsync(this.buildId(zimmerman, "neutral_temperature"), {type: "state", common: {name: "neutrale Temperatur", type: "number", role: "state", unit: tempUnit, read: true, write: true, def: 70}, native: {},});
-		await this.setObjectAsync(this.buildId(zimmerman, "precipitation_today"), {type: "state", common: {name: "Niederschlag heute", type: "number", role: "state", unit: rainUnit, read: true, write: true,}, native: {},});
-		await this.setObjectAsync(this.buildId(zimmerman, "precipitation_yesterday"), {type: "state", common: {name: "Niederschlag gestern", type: "number", role: "state", unit: rainUnit, read: true, write: true,}, native: {},});
+		this.setObjectAsync(buildId(zimmerman, "average_humidity"), {type: "state", common: {name: "rel. mittlere Luftfeuchte", type: "number", role: "state", unit: "%", read: true, write: true}, native: {},});
+		this.setObjectAsync(buildId(zimmerman, "neutral_humidity"), {type: "state", common: {name: "rel. neutrale Luftfeuchte", type: "number", role: "state", unit: "%", read: true, write: true, def: 30}, native: {},});
+		this.setObjectAsync(buildId(zimmerman, "average_temperature"), {type: "state", common: {name: "mittlere Temperatur", type: "number", role: "state", unit: tempUnit, read: true, write: true}, native: {},});
+		this.setObjectAsync(buildId(zimmerman, "neutral_temperature"), {type: "state", common: {name: "neutrale Temperatur", type: "number", role: "state", unit: tempUnit, read: true, write: true, def: 70}, native: {},});
+		this.setObjectAsync(buildId(zimmerman, "precipitation_today"), {type: "state", common: {name: "Niederschlag heute", type: "number", role: "state", unit: rainUnit, read: true, write: true,}, native: {},});
+		this.setObjectAsync(buildId(zimmerman, "precipitation_yesterday"), {type: "state", common: {name: "Niederschlag gestern", type: "number", role: "state", unit: rainUnit, read: true, write: true,}, native: {},});
 
-		await this.setObjectAsync(this.buildId(zimmerman, "adjustment"), {type: "state", common: {name: "Anpassung Beregnungsmenge", type: "number", role: "state", unit: "%", read: true, write: true,}, native: {},});
+		this.setObjectAsync(buildId(zimmerman, "adjustment"), {type: "state", common: {name: "Anpassung Beregnungsmenge", type: "number", role: "state", unit: "%", read: true, write: true,}, native: {},});
 
 		for (var t = 0; t <= 1; t++) {
 			for (var h = 0; h <= 23; h++) {
-				await this.setObjectAsync(this.buildId(zimmerman, tage[t], values[0] + '_' + hours[h]), {type: "state", common: {name: "Temperatur ", type: "number", role: "state", unit: tempUnit, read: true, write: true,}, native: {},});
-				await this.setObjectAsync(this.buildId(zimmerman, tage[t], values[1] + '_' + hours[h]), {type: "state", common: {name: "rel. Feuchte", type: "number", role: "state", unit: tempUnit, read: true, write: true,}, native: {},});
-				await this.setObjectAsync(this.buildId(zimmerman, tage[t], values[2] + '_' + hours[h]), {type: "state", common: {name: "Niederschlag ", type: "number", role: "state", unit: tempUnit, read: true, write: true,}, native: {},});
+				this.setObjectAsync(buildId(zimmerman, tage[t], values[0] + '_' + hours[h]), {type: "state", common: {name: "Temperatur ", type: "number", role: "state", unit: tempUnit, read: true, write: true,}, native: {},});
+				this.setObjectAsync(buildId(zimmerman, tage[t], values[1] + '_' + hours[h]), {type: "state", common: {name: "rel. Feuchte", type: "number", role: "state", unit: tempUnit, read: true, write: true,}, native: {},});
+				this.setObjectAsync(buildId(zimmerman, tage[t], values[2] + '_' + hours[h]), {type: "state", common: {name: "Niederschlag ", type: "number", role: "state", unit: tempUnit, read: true, write: true,}, native: {},});
 			}
 		}
+	}
+	/**
+	 * Create Station
+	 * @param {*} station 
+	 * @param {*} index 
+	 */
+	createStation(station, index) {
+		var idStation = buildId(sprinkler, 'Station', station.id.toString());
+	
+		this.setObjectAsync(buildId(idStation, 'name'), {type: "state", common: {name: "Bezeichnung Bewässerungskreis", type: "string", role: "state", read: true, write: true, def: station.name}, native: {}});
+		this.setObjectAsync(buildId(idStation, 'subscription'), {type: "state", common: {name: "verknüpfter Status", type: "string", role: "state", read: true, write: true, def: station.subscription}, native: {}});
+		this.setObjectAsync(buildId(idStation, 'parallel'), {type: "state", common: {name: "Parallel", type: "bool", role: "state", read: true, write: true, def: station.parallel}, native: {}});
+		this.setObjectAsync(buildId(idStation, 'parallel'), {type: "state", common: {name: "Disabled", type: "bool", role: "state", read: true, write: true, def: station.disabled}, native: {}});
+		this.setObjectAsync(buildId(idStation, 'activate'), {type: "state", common: {name: "Aktivieren für n Sekunden", type: "bool", role: "state", read: true, write: true}, native: {}});
+		this.setObjectAsync(buildId(idStation, 'state'), {type: "state", common: {name: "Aktiv", type: "number", role: "state", states: "0:not running; 1:waiting; 2:running; 3:stopping", read: true, write: true}, native: {}});
+		this.setObjectAsync(buildId(idStation, 'started'), {type: "state", common: {name: "letzter Start", type: "number", role: "state", read: true, write: true}, native: {}});
+		this.setObjectAsync(buildId(idStation, 'ended'), {type: "state", common: {name: "letztes Ende", type: "number", role: "state", read: true, write: true}, native: {}});
+		this.setObjectAsync(buildId(idStation, 'master'), {type: "state", common: {name: "Masterstation?", type: "bool", role: "state", read: true, write: true, def: station.master}, native: {}});
+		this.setObjectAsync(buildId(idStation, 'needs_master'), {type: "state", common: {name: "benötigt Master", type: "number", role: "state", read: true, write: true, def: station.needs_master}, native: {}});
 	}
 	/**
 	 * Is called when adapter shuts down - callback has to be called under any circumstances!
