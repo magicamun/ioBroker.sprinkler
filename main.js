@@ -117,10 +117,14 @@ class Sprinkler extends utils.Adapter {
 		for (var st = 0; st < stations.length; st++) {
 			this.createStation(stations[st], st);
 		}
-
+		/*
+		create programs
+		*/
 		for (var p = 0; p < programs.length; p++) {
 			this.createProgram(programs[p], p);
 		}
+
+		this.subscribeForeignStates("fhem.0.AU_GA_TF_Garage.humidity", this.trackHumidity);
 		// in this template all states changes inside the adapters namespace are subscribed
 		this.subscribeStates("*");
 
@@ -232,6 +236,42 @@ class Sprinkler extends utils.Adapter {
 		}
 	}
 
+	/*
+	 */
+	trackHumidity(obj) {
+		var ts = new Date(obj.newState.ts);
+		var currenthour = ts.getHours();
+		var newstate = parseFloat(obj.newState.val);
+		var idZimmerman = buildId(sprinkler, zimmerman);
+		
+		var idZimmermanToday = buildId(idZimmerman, tage[0], values[1]) + '_' + hours[currenthour];
+		var idZimmermanYesterday = buildId(idZimmerman, tage[1], values[1]) + '_' + hours[currenthour]; 
+		var lc = this.getState(idZimmermanToday, function(err, state) { return state.val;});
+		
+		var lasthour = currenthour > 1 ? currenthour - 1 : 23;
+		var day = currenthour > 1 ? tage[0] : tage[1];
+		var lastState = buildId(idZimmerman, day, values[1]) + '_' + hours[lasthour];
+	
+		var avg = parseFloat(this.getState(idZimmermanToday, function(err, state) { return state.val;}));
+		
+		// die l. Aktualisierung des Wertes für die Zeitscheibe (Stunde) wird kurz vor Ende der Zeitscheibe passiert sein - 
+		// daher nicht 24 Stunden, sondern 23...
+		if (ts - lc > ((h24 - 1) * 1000)) {
+			// Aktuellen Stand nach "yesterday" wegsichern
+			this.setState(idZimmermanYesterday, avg);
+		}
+		if (ts -lc > (h1 * 1000)) { // Wenn Wert älter als eine Stunde
+			// den Wert der l. Stunde als Basis für den gleitenden Durchschnitt holen
+			avg = parseFloat(this.getState(lastState, function(err, state) { return state?.val;}));
+		}
+		// Gleitenden Durchchnitt ermitteln
+		avg = (avg + newstate) / 2;
+	
+		this.setState(idZimmermanToday, Math.round(avg*10) / 10);
+	
+		// ZimmermanAverage(1);
+		// ZimmermanAdjustment();
+	}
 	/**
 	 * Is called when adapter shuts down - callback has to be called under any circumstances!
 	 * @param {() => void} callback
