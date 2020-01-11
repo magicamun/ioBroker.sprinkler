@@ -43,9 +43,7 @@ class Sprinkler extends utils.Adapter {
 	 */
 	async onReady() {
 		// Initialize your adapter here
-		tempUnit = this.getObject("system.config", function(err, obj) {
-			return obj.common.tempUnit;
-		});
+		tempUnit = this.getForeignObject("system.config").common.tempUnit;
 				
 		// The adapters config (in the instance object everything under the attribute "native") is accessible via
 		// this.config:
@@ -70,6 +68,8 @@ class Sprinkler extends utils.Adapter {
 			},
 			native: {},
 		});
+
+		await this.setObjectAsync("testVariable", {type: "state", common: {name: "testVariable", type: "boolean", role: "indicator", read: true, write: true,}, native: {},);
 
 		// in this template all states changes inside the adapters namespace are subscribed
 		this.subscribeStates("*");
