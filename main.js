@@ -117,7 +117,10 @@ class Sprinkler extends utils.Adapter {
 		for (var st = 0; st < stations.length; st++) {
 			this.createStation(stations[st], st);
 		}
-		stations.forEach(this.createStation);
+
+		for (var p = 0; p < programs.length; p++) {
+			this.createProgram(programs[p], p);
+		}
 		// in this template all states changes inside the adapters namespace are subscribed
 		this.subscribeStates("*");
 
@@ -206,7 +209,7 @@ class Sprinkler extends utils.Adapter {
 	createProgram(program, pi) {
 		var idProgram = buildId('Program', pi.toString()); 
 		var result;
-		
+
 		this.setObjectAsync(buildId(idProgram, 'name'), {type: "state", common: {name: "Programmname", type: "string", role: "state", read: true, write: true, def: program.name}, native: {}});
 		this.setObjectAsync(buildId(idProgram, 'state'), {type: "state", common: {name: "Status", type: "number", role: "state", states: "0:unscheduled; 1:scheduled; 2:inactive; 3:adHoc", read: true, write: true, def: program.state}, native: {}});
 		this.setObjectAsync(buildId(idProgram, 'schedule'), {type: "state", common: {name: "Zeitplan", type: "string", role: "state", read: true, write: true, def: program.state}, native: {}});
