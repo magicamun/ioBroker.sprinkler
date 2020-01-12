@@ -15,7 +15,7 @@ const average = 'average';
 const tage = ['today', 'yesterday'];
 const hours = ['00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23']
 const values = ['temperature', 'humidity', 'precipitation'];
-const tempUnit = "°C";
+const tempUnit = "°F";
 const rainUnit = "mm";
 
 function buildId() {
@@ -96,7 +96,11 @@ class Sprinkler extends utils.Adapter {
 		this.log.info("Mein Log 1");
 
 		// tempUnit = this.getForeignObject("system.config").common.tempUnit;
-		this.log.info("Mein Log 2");
+		this.getForeignObject("system.config", (err, obj) => {
+			if (obj && obj.common) {
+				tempUnit = obj.common.tempUnit;
+			}
+		this.log.info("Mein Log 2" + tempUnit);
 				
 		// The adapters config (in the instance object everything under the attribute "native") is accessible via
 		// this.config:
@@ -246,28 +250,38 @@ class Sprinkler extends utils.Adapter {
 		
 		var idZimmermanToday = buildId(idZimmerman, tage[0], values[1]) + '_' + hours[currenthour];
 		var idZimmermanYesterday = buildId(idZimmerman, tage[1], values[1]) + '_' + hours[currenthour]; 
-		var lc = this.getState(idZimmermanToday, function(err, state) { return state.val;});
+		var lc;
+
+		this.getState(idZimmermanToday, function(obj) {
+			 lc = obj.val;
+		});
 		
 		var lasthour = currenthour > 1 ? currenthour - 1 : 23;
 		var day = currenthour > 1 ? tage[0] : tage[1];
 		var lastState = buildId(idZimmerman, day, values[1]) + '_' + hours[lasthour];
 	
-		var avg = parseFloat(this.getState(idZimmermanToday, function(err, state) { return state.val;}));
+		var avg;
+		
+		this.getState(idZimmermanToday, function(obj) {
+			 avg = parseFloat(obj.val);
+		});
 		
 		// die l. Aktualisierung des Wertes für die Zeitscheibe (Stunde) wird kurz vor Ende der Zeitscheibe passiert sein - 
 		// daher nicht 24 Stunden, sondern 23...
 		if (ts - lc > ((h24 - 1) * 1000)) {
 			// Aktuellen Stand nach "yesterday" wegsichern
-			this.setState(idZimmermanYesterday, avg);
+			this.setState(idZimmermanYesterday, avg, true);
 		}
 		if (ts -lc > (h1 * 1000)) { // Wenn Wert älter als eine Stunde
 			// den Wert der l. Stunde als Basis für den gleitenden Durchschnitt holen
-			avg = parseFloat(this.getState(lastState, function(err, state) { return state?.val;}));
+			this.getState(lastState, function(obj) {
+				avg = parseFloat(obj.val);
+			});
 		}
 		// Gleitenden Durchchnitt ermitteln
 		avg = (avg + newstate) / 2;
 	
-		this.setState(idZimmermanToday, Math.round(avg*10) / 10);
+		this.setState(idZimmermanToday, Math.round(avg*10) / 10, true);
 	
 		// ZimmermanAverage(1);
 		// ZimmermanAdjustment();
